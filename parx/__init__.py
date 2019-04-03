@@ -2,5 +2,6 @@
 # This file is licensed under the MIT license. See LICENSE file
 
 
-from .src import lexer
-from .src import lexer_rules
+from . import lexer
+from . import lexer_rules
+from . import posinfo

@@ -2,6 +2,8 @@
 # This file is licensed under the MIT license. See LICENSE file
 
 
+from . import posinfo
+
 import re
 
 
@@ -102,7 +104,7 @@ class Rule(object):
 
         Override this method to add more complex matching logic
 
-        Default version constructs a self.TokenType object from the matching string (see the code)
+        Default version constructs an object of type self.get_token_type() from the matching string (see the code)
 
         Arguments:
             data   - string input
@@ -119,7 +121,7 @@ class Rule(object):
             The same as self.TokenType.__init__ raises, but this method in derived classes can raise
             other exceptions
         """
-        return self.TokenType(data[offset : offset+length], pi=posinfo.from_data(data, offset))
+        return self.get_token_type()(data[offset : offset+length], pi=posinfo.from_data(data, offset))
 
     def get_token_type(self):
         """
@@ -150,6 +152,9 @@ class Token(object):
 
         Arguments:
             pi - posinfo.Posinfo object describing the position of this token in the source file
+
+        Raises:
+            None
         """
         self._posinfo = pi
     
@@ -165,8 +170,20 @@ class Token(object):
         """
         return ''
 
+    def __eq__(self, other):
+        """
+        Test two tokens for equality
+        """
+        return type(self) is type(other)
 
-class SimpleToken(object):
+    def __ne__(self, other):
+        """
+        Test two tokens for inequality
+        """
+        return not (self == other)
+
+
+class SimpleToken(Token):
     """
     Simple token holding only the string passed as an argument to __init__ method
 
@@ -180,11 +197,24 @@ class SimpleToken(object):
         content - a string forming the token
     """
     def __init__(self, content, pi):
+        """
+        Constructor
+
+        Arguments:
+            content - string to hold
+            pi      - posinfo.Posinfo object representing the position of this token in the source file
+
+        Raises:
+            None
+        """
         super().__init__(pi)
         self.content = str(content)
         
     def __str__(self):
         return self.content
+
+    def __eq__(self, other):
+        return super().__eq__(other) and self.content == other.content
 
 
 class Lexer(object):
