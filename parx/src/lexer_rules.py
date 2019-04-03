@@ -2,7 +2,7 @@
 # This file is licensed under MIT license. See LICENSE file
 
 
-import .src.lexer as lexer
+from . import lexer
 
 
 class String(lexer.Rule):
