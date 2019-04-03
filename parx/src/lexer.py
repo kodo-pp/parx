@@ -1,9 +1,8 @@
 # (c) 2019 Alexander Korzun
-# This file is licensed under MIT license. See LICENSE file
+# This file is licensed under the MIT license. See LICENSE file
 
 
 import re
-import heapq
 
 
 class LexerError(Exception):

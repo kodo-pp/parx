@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# This file is placed into public domain. See UNLICENSE.setup.txt
+# (c) 2019 Alexander Korzun
+# This file is licensed under the MIT license. See LICENSE file
 
 
 from setuptools import setup
@@ -8,7 +9,7 @@ from setuptools import setup
 setup(
     name            = 'parx',
     version         = '1.0.0alpha',
-    description     = 'Simple parser for user-defined grammars',
+    description     = 'A simple parser for user-defined grammars',
     author          = 'Alexander Korzun',
     author_email    = 'korzun.sas@mail.ru',
     license         = 'MIT',
