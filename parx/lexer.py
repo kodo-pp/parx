@@ -174,7 +174,7 @@ class Token(object):
         """
         Test two tokens for equality
         """
-        return type(self) is type(other)
+        return type(self) is type(other) and self._posinfo == other._posinfo
 
     def __ne__(self, other):
         """

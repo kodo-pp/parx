@@ -27,6 +27,12 @@ class Posinfo(object):
     def __repr__(self):
         return 'Posinfo({})'.format(str(self))
 
+    def __eq__(self, other):
+        return (self.row, self.col) == (other.row, other.col)
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 def from_data(data, offset):
     """
