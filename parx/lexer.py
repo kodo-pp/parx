@@ -233,13 +233,15 @@ class Lexer(object):
         self.token_specs = []
         self.posinfo = None
 
-    def add(self, rule, ignore=False):
+    def add(self, rule, *, priority=0, ignore=False):
         """
         Add a token specification
 
         Arguments:
-            rule   - rule for reading the token (Rule object)
-            ignore - if true, the token will be ignored
+            rule     - rule for reading the token (Rule object)
+            ignore   - if true, the token will be ignored
+            priority - rule priority. If two or more rules yield matches with equal length, the one with
+                       higher priority will be used
 
         Returns:
             None
@@ -247,7 +249,7 @@ class Lexer(object):
         Raises:
             None
         """
-        self.token_specs.append({'rule': rule, 'ignore': ignore})
+        self.token_specs.append({'rule': rule, 'ignore': ignore, 'priority': priority})
 
     def tokenize(self, data):
         """
@@ -294,17 +296,18 @@ class Lexer(object):
 
         Raises:
             NoMatchingTokenError if no matching token was found
-            AmbiguousTokenError  if multiple tokens with same length match
+            AmbiguousTokenError  if multiple tokens with same length and priority match
         """
         
         matches = []
 
         for spec in self.token_specs:
             rule = spec['rule']
+            priority = spec['priority']
             length, token_obj = rule.match(data, offset, self.posinfo)
             if length <= 0 or token_obj is None:
                 continue
-            matches.append((length, token_obj, spec))
+            matches.append((length, priority, token_obj, spec))
 
         # If nothing was found, raise NoMatchingTokenError
         if len(matches) == 0:
@@ -312,25 +315,29 @@ class Lexer(object):
 
         # If only one matching token was found, return it
         if len(matches) == 1:
-            length, token_obj, spec = matches[0]
+            length, priority, token_obj, spec = matches[0]
             return length, {'spec': spec, 'token': token_obj}
 
-        # If multiple matching tokens were found, choose the longest matching
+        # If multiple matching tokens were found, choose the longest matching (or with the highest priority if
+        # multiple tokens have the same length).
+
         # Firstly, we sort the resulting list. It is needed to find two longest tokens (see below).
         # It could have been done more efficiently (a) manually, iterating through the list and maintaining
         # two maximal values or (b) using heapq module. However, first method isn't pythonic (and I believe
         # the code I write for this lib has to be pythonic and simple) and the second method doesn't let
-        # me specify a custom key function, which is needed to sort only by length.
-        matches.sort(key = lambda match: match[0])  # Sort by length
+        # me specify a custom key function, which is needed to sort only by length and priority.
+
+        # Sort by (length, priority) tuple. [0:2] slice corresponds to such tuple
+        matches.sort(key = lambda match: match[0:2])  
 
         # Extract two longest matches
         first_longest  = matches[-1] 
         second_longest = matches[-2]
 
-        # If they have the same length, the matching is ambiguous
-        if first_longest[0] == second_longest[0]:
+        # If they have the same and priority, the matching is ambiguous
+        if first_longest[0:2] == second_longest[0:2]:
             raise AmbiguousTokenError(data=data, offset=offset)
 
         # Otherwise, return the longest one
-        length, token_obj, spec = first_longest
+        length, priority, token_obj, spec = first_longest
         return length, {'spec': spec, 'token': token_obj}
