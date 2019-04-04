@@ -5,6 +5,7 @@
 from . import posinfo
 
 import re
+import copy
 
 
 class LexerError(Exception):
@@ -55,7 +56,7 @@ class Rule(object):
     A class representing a token matching rule
     """
     
-    def match(self, data, offset):
+    def match(self, data, offset, pi):
         """
         Find the longest match in the specified string
 
@@ -64,6 +65,7 @@ class Rule(object):
         Arguments:
             data   - string input
             offset - offset in `data`
+            pi     - Posinfo object representing the position of the token in the source file
 
         Returns:
             tuple: (
@@ -77,7 +79,7 @@ class Rule(object):
         length = self.get_length(data, offset)
         if length <= 0:
             return length, None
-        token_obj = self.make_token(data, offset, length)
+        token_obj = self.make_token(data, offset, length, pi)
         return length, token_obj
 
     def get_length(self, data, offset):
@@ -98,7 +100,7 @@ class Rule(object):
         """
         return 0
 
-    def make_token(self, data, offset, length):
+    def make_token(self, data, offset, length, pi):
         """
         Return the matching Token object
 
@@ -110,6 +112,7 @@ class Rule(object):
             data   - string input
             offset - offset in `data`
             length - value returned from self.get_length(), guaranted to be positive
+            pi     - Posinfo object representing the position of the token in the source file
 
         Returns:
             the matching Token object. This method in derived classes should not return None
@@ -121,7 +124,7 @@ class Rule(object):
             The same as self.TokenType.__init__ raises, but this method in derived classes can raise
             other exceptions
         """
-        return self.get_token_type()(data[offset : offset+length], pi=posinfo.from_data(data, offset))
+        return self.get_token_type()(data[offset : offset+length], pi=copy.deepcopy(pi))
 
     def get_token_type(self):
         """
@@ -228,6 +231,7 @@ class Lexer(object):
         """
         super().__init__()
         self.token_specs = []
+        self.posinfo = None
 
     def add(self, rule, ignore=False):
         """
@@ -259,10 +263,12 @@ class Lexer(object):
             NoMatchingTokenError if no matching token was found
             AmbiguousTokenError  if multiple tokens with same length match
         """
+        self.posinfo = posinfo.Posinfo(1, 1)
         offset = 0
         while offset < len(data):
             # While not EOF
             length, token = self._next_token(data, offset)
+            self.posinfo.feed(data, offset, offset + length)
             if not token['spec']['ignore']:
                 yield token['token']
             offset += length
@@ -295,7 +301,7 @@ class Lexer(object):
 
         for spec in self.token_specs:
             rule = spec['rule']
-            length, token_obj = rule.match(data, offset)
+            length, token_obj = rule.match(data, offset, self.posinfo)
             if length <= 0 or token_obj is None:
                 continue
             matches.append((length, token_obj, spec))
