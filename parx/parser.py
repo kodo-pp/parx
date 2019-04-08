@@ -12,17 +12,33 @@ class ParserError(Exception):
     pass
 
 
-class UnexpectedTokenError(ParserError):
-    """
-    An error when a parser encounters a token of a certain type but it doesn't match
-    any parsing rule known to the parser
-    """
-    pass
-
-
 class IncompleteError(ParserError):
     """
     An error when a parser finishes parsing the input but an end of the input was not reached
+    """
+    def __init__(self, token):
+        """
+        Constructor
+
+        Arguments:
+            token - the first token not covered by the parser rules
+
+        Raises:
+            None
+        """
+        self.token = token
+
+    def __str__(self):
+        return str(token)
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, repr(self.token))
+
+
+class PostponeMatching(Exception):
+    """
+    Exception indicating that left recursion was detected and asking to postpone matching of the current
+    rule until this situation is resolved
     """
     pass
 
@@ -31,10 +47,23 @@ class Rule(object):
     """
     Parsing rule
 
-    This base class matches nothing
+    This base class matches an empty sequence of tokens
     """
     def match(self, tokens, offset):
-        
+        """
+        Perform matching
+
+        Arguments:
+            tokens - token sequence
+            offset - offset in that sequence
+
+        Returns:
+            (lenght, node) tuple. Length is the number of consumed tokens, node is the AST node
+
+        Raises:
+            None
+        """
+        return 0, None
 
 
 class Parser(object):
@@ -46,9 +75,11 @@ class Parser(object):
         # TODO: insert initialization code if needed
         pass
 
-    def add(self, rule):
+    def set_root_rule(self, rule):
         """
-        Add a parsing rule to the parser
+        Set the rule used to produce the root AST token
+
+        Replaces the current rule, if any
 
         Arguments:
             rule - parsing rule (an instance of Rule)
@@ -74,8 +105,12 @@ class Parser(object):
             UnexpectedTokenError if an unexpected token was encountered
             IncompleteError      if the parsing has finished but the end of the token sequence wasn't reached
         """
+        # TODO: figure out the syntax error place better
         if type(tokens) is not list:
             tokens = list(tokens)
-        
-        # TODO
-        raise NotImplementedError()
+
+        length, node = self.root_rule.match(tokens, offset=0)
+        if length < len(tokens):
+            raise IncompleteError(tokens[length])
+
+        return node
