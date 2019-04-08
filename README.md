@@ -11,5 +11,8 @@ Unless stated otherwise, all files (including `README.md`) are licensed under MI
 file).
 
 ### Contributing
-By contributing to this project, you agree to license your contributions under the MIT license (see the `LICENSE`
-file).
+By contributing to this repository, you agree to license your contributions under the MIT license (see the
+`LICENSE` file).
+
+If you don't want to use the MIT license for your contributions, you can fork this repository on GitHub, or
+create an independent fork of this project in other way
