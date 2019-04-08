@@ -43,6 +43,13 @@ class PostponeMatching(Exception):
     pass
 
 
+class SkipRule(Exception):
+    """
+    Exception indicating that the current rule should be skipped
+    """
+    pass
+
+
 class Rule(object):
     """
     Parsing rule
@@ -64,6 +71,30 @@ class Rule(object):
             None
         """
         return 0, None
+
+
+class Node(object):
+    """
+    AST node
+    """
+    def __init__(self, value=None, pi=None):
+        self.value = value
+        self._posinfo = pi
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return '{}({}) [at {}]'.format(self.__class__.__name__, repr(self.value), str(self._posinfo))
+
+    def __eq__(self, other):
+        return type(self) is type(other) and self.value == other.value and self._posinfo == other._posinfo
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    def is_identical(self, other):
+        return type(self) is type(other) and self.value == other.value
 
 
 class Parser(object):
@@ -90,6 +121,7 @@ class Parser(object):
         Raises:
             None
         """
+        self.root_rule = rule
 
     def parse(self, tokens):
         """
@@ -105,10 +137,12 @@ class Parser(object):
             UnexpectedTokenError if an unexpected token was encountered
             IncompleteError      if the parsing has finished but the end of the token sequence wasn't reached
         """
+        
         # TODO: figure out the syntax error place better
         if type(tokens) is not list:
             tokens = list(tokens)
 
+        #import pudb; pudb.set_trace()
         length, node = self.root_rule.match(tokens, offset=0)
         if length < len(tokens):
             raise IncompleteError(tokens[length])

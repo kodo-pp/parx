@@ -149,7 +149,7 @@ class Token(object):
     """
     A class representing an abstract token
     """
-    def __init__(self, pi):
+    def __init__(self, pi=None):
         """
         Constructor
 
@@ -179,6 +179,12 @@ class Token(object):
         """
         return type(self) is type(other) and self._posinfo == other._posinfo
 
+    def is_identical(self, other):
+        """
+        Test two tokens for equality ignoring Posinfo information
+        """
+        return type(self) is type(other)
+
     def __ne__(self, other):
         """
         Test two tokens for inequality
@@ -199,7 +205,7 @@ class SimpleToken(Token):
         (see Token.__init__)
         content - a string forming the token
     """
-    def __init__(self, content, pi):
+    def __init__(self, content=None, pi=None):
         """
         Constructor
 
@@ -218,6 +224,9 @@ class SimpleToken(Token):
 
     def __eq__(self, other):
         return super().__eq__(other) and self.content == other.content
+
+    def is_identical(self, other):
+        return super().is_identical(other) and self.content == other.content
 
 
 class Lexer(object):

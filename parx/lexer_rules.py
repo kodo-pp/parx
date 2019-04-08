@@ -94,3 +94,15 @@ class Attach(lexer.Rule):
         See lexer.Rule.get_token_type
         """
         return self.token_class
+
+
+class IgnoreValue(lexer.Token):
+    """
+    Token wrapper used to ignore the value of token when doing comparisons
+    """
+    def __init__(self, token):
+        super().__init__(pi=token._posinfo)
+        self.token = token
+
+    def is_identical(self, other):
+        return type(self.token) is type(other)
